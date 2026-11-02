@@ -638,22 +638,29 @@
   }
 
   function updateSideBySideImages() {
-    if (!state.diffData) return;
+  if (!state.diffData) return;
 
-    if (state.diffData.is_completely_different) {
-      els.imgA.src = `data:image/png;base64,${state.diffData.img_a_b64}`;
-      els.imgB.src = `data:image/png;base64,${state.diffData.img_b_b64}`;
-      return;
-    }
-
-    if (state.showHighlights) {
-      els.imgA.src = `data:image/png;base64,${state.diffData.img_a_highlighted_b64 || state.diffData.img_a_b64}`;
-      els.imgB.src = `data:image/png;base64,${state.diffData.img_b_highlighted_b64 || state.diffData.img_b_b64}`;
-    } else {
-      els.imgA.src = `data:image/png;base64,${state.diffData.img_a_b64}`;
-      els.imgB.src = `data:image/png;base64,${state.diffData.img_b_b64}`;
-    }
+  if (state.diffData.is_completely_different) {
+    els.imgA.src = `data:image/png;base64,${state.diffData.img_a_b64}`;
+    els.imgB.src = `data:image/png;base64,${state.diffData.img_b_b64}`;
+    return;
   }
+
+  if (state.showHighlights) {
+    els.imgA.src = `data:image/png;base64,${state.diffData.img_a_highlighted_b64 || state.diffData.img_a_b64}`;
+    els.imgB.src = `data:image/png;base64,${state.diffData.img_b_highlighted_b64 || state.diffData.img_b_b64}`;
+  } else {
+    els.imgA.src = `data:image/png;base64,${state.diffData.img_a_b64}`;
+    els.imgB.src = `data:image/png;base64,${state.diffData.img_b_b64}`;
+  }
+
+  const overlayImg = document.getElementById("overlay-result-image");
+
+  if (overlayImg && state.diffData.overlay_combined_b64) {
+    overlayImg.src =
+      `data:image/png;base64,${state.diffData.overlay_combined_b64}`;
+  }
+}
 
   // ─────────────────────────────────────────────────────────────
   // DIFFERENCE NAVIGATOR & SPOTLIGHT FOCUS
@@ -1196,27 +1203,51 @@
   // ─────────────────────────────────────────────────────────────
   // EXPORT DIFF IMAGE
   // ─────────────────────────────────────────────────────────────
-  function exportDiffResult() {
-    if (!state.diffData) {
-      alert('Please run a comparison first before exporting.');
-      return;
-    }
-
-    const a = document.createElement('a');
-    // Export based on active view
-    if (state.activeView === 'diff' && state.diffSubmode === '3color' && state.diffData.diff_3c_b64) {
-      a.href = `data:image/png;base64,${state.diffData.diff_3c_b64}`;
-    } else {
-      a.href = `data:image/png;base64,${state.diffData.diff_b64}`;
-    }
-
-    const docA = state.fileA ? state.fileA.name.replace(/\.[^/.]+$/, '') : 'docA';
-    const docB = state.fileB ? state.fileB.name.replace(/\.[^/.]+$/, '') : 'docB';
-    a.download = `diff_${docA}_vs_${docB}_p${state.currentPage}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+//  function exportDiffResult() {
+//    if (!state.diffData) {
+//      alert('Please run a comparison first before exporting.');
+//      return;
+//    }
+//
+//    const a = document.createElement('a');
+//    // Export based on active view
+//    if (state.activeView === 'diff' && state.diffSubmode === '3color' && state.diffData.diff_3c_b64) {
+//      a.href = `data:image/png;base64,${state.diffData.diff_3c_b64}`;
+//    } else {
+//      a.href = `data:image/png;base64,${state.diffData.diff_b64}`;
+//    }
+//
+//    const docA = state.fileA ? state.fileA.name.replace(/\.[^/.]+$/, '') : 'docA';
+//    const docB = state.fileB ? state.fileB.name.replace(/\.[^/.]+$/, '') : 'docB';
+//    a.download = `diff_${docA}_vs_${docB}_p${state.currentPage}.png`;
+//    document.body.appendChild(a);
+//    a.click();
+//    document.body.removeChild(a);
+//  }
+    function exportDiffResult() {
+  if (!state.diffData?.overlay_combined_b64) {
+    alert('Overlay image not available.');
+    return;
   }
+
+  const a = document.createElement('a');
+  a.href = `data:image/png;base64,${state.diffData.overlay_combined_b64}`;
+
+  const docA = state.fileA
+    ? state.fileA.name.replace(/\.[^/.]+$/, '')
+    : 'docA';
+
+  const docB = state.fileB
+    ? state.fileB.name.replace(/\.[^/.]+$/, '')
+    : 'docB';
+
+  a.download = `overlay_${docA}_vs_${docB}_p${state.currentPage}.png`;
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
 
   // ─────────────────────────────────────────────────────────────
   // KEYBOARD SHORTCUTS

@@ -35,7 +35,8 @@ from scipy import ndimage
 logger = logging.getLogger(__name__)
 
 try:
-    import pymupdf as fitz
+    # import pymupdf as fitz
+    import fitz
     _HAS_FITZ = True
 except ImportError:
     try:
@@ -340,6 +341,17 @@ def image_to_b64(img: Image.Image) -> str:
     buf = io.BytesIO()
     img.save(buf, format='PNG')
     return base64.b64encode(buf.getvalue()).decode('utf-8')
+#added
+def numpy_to_b64(img):
+    success, buffer = cv2.imencode(
+        ".png",
+        cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    )
+
+    if not success:
+        return ""
+
+    return base64.b64encode(buffer).decode("utf-8")
 
 
 def _convert_to_white_bg_rgb(img: Image.Image) -> Image.Image:
@@ -1240,8 +1252,9 @@ def _load_image(payload: bytes, filename: str, page: int = 1, max_dim: int = 140
             page_obj = doc.load_page(idx)
             pw = max(float(page_obj.rect.width or 0), 1.0)
             ph = max(float(page_obj.rect.height or 0), 1.0)
-            scale = min(2.0, float(max_dim) / max(pw, ph))
-            scale = max(0.05, scale)
+            # scale = min(2.0, float(max_dim) / max(pw, ph))
+            # scale = max(0.05, scale)
+            scale = 5.0
             arr = _render_pdf_page(page_obj, scale)
             img = Image.fromarray(arr, 'RGB')
             return img, total_pages
@@ -1274,8 +1287,9 @@ def _load_image(payload: bytes, filename: str, page: int = 1, max_dim: int = 140
                     page_obj = doc.load_page(idx)
                     pw = max(float(page_obj.rect.width or 0), 1.0)
                     ph = max(float(page_obj.rect.height or 0), 1.0)
-                    scale = min(2.0, float(max_dim) / max(pw, ph))
-                    scale = max(0.05, scale)
+                    # scale = min(2.0, float(max_dim) / max(pw, ph))
+                    # scale = max(0.05, scale)
+                    scale = 5.0
                     arr = _render_pdf_page(page_obj, scale)
                     doc.close()
                     return Image.fromarray(arr, 'RGB'), total_pages
@@ -1660,8 +1674,9 @@ def compare_documents(bytes_a: bytes, filename_a: str,
 
             max_pt_w = max(float(page_a.rect.width or 0), float(page_b.rect.width or 0), 1.0)
             max_pt_h = max(float(page_a.rect.height or 0), float(page_b.rect.height or 0), 1.0)
-            scale = min(2.0, float(max_dim) / max(max_pt_w, max_pt_h))
-            scale = max(0.05, scale)
+            # scale = min(2.0, float(max_dim) / max(max_pt_w, max_pt_h))
+            # scale = max(0.05, scale)
+            scale = 5.0
 
             try:
                 arr_a_raw = _render_pdf_page(page_a, scale)
@@ -1778,6 +1793,70 @@ def compare_documents(bytes_a: bytes, filename_a: str,
     img_a_clean = Image.fromarray(arr_a, 'RGB')
     img_b_clean = Image.fromarray(arr_b, 'RGB')
 
+#added
+    # =====================================
+    # Overlay Style Side-By-Side Images
+    # =====================================
+
+    gray1 = cv2.cvtColor(
+        arr_a,
+        cv2.COLOR_RGB2GRAY
+    )
+
+    gray2 = cv2.cvtColor(
+        arr_b,
+        cv2.COLOR_RGB2GRAY
+    )
+
+    _, mask1 = cv2.threshold(
+        gray1,
+        240,
+        255,
+        cv2.THRESH_BINARY_INV
+    )
+
+    _, mask2 = cv2.threshold(
+        gray2,
+        240,
+        255,
+        cv2.THRESH_BINARY_INV
+    )
+
+    removed_mask = cv2.bitwise_and(
+        mask1,
+        cv2.bitwise_not(mask2)
+    )
+
+    added_mask = cv2.bitwise_and(
+        mask2,
+        cv2.bitwise_not(mask1)
+    )
+
+    # pdf1_marked = arr_a.copy()
+    # pdf2_marked = arr_b.copy()
+    #
+    # # Blue highlight on PDF1
+    # pdf1_marked[removed_mask > 0] = [255, 0, 0]
+    #
+    # # Red highlight on PDF2
+    # pdf2_marked[added_mask > 0] = [0, 0, 255]
+    #added
+    pdf1_marked = arr_a.copy()
+    pdf2_marked = arr_b.copy()
+
+    # NEW
+    combined = arr_a.copy()
+
+    pdf1_marked[removed_mask > 0] = [255, 0, 0]
+    pdf2_marked[added_mask > 0] = [0, 0, 255]
+
+    # NEW
+    combined[removed_mask > 0] = [255, 0, 0]
+    combined[added_mask > 0] = [0, 0, 255]
+
+
+
+
     # Visual overlays & stats
     res = _generate_visuals(
         img_a_clean, img_b_clean, arr_a, arr_b, all_changes, changed_pixels_mask
@@ -1831,6 +1910,12 @@ def compare_documents(bytes_a: bytes, filename_a: str,
     res['total_pages_a'] = pages_a
     res['total_pages_b'] = pages_b
     res['total_pages'] = max(pages_a, pages_b)
+#added
+    # Replace Side-by-Side Images
+    res["img_a_highlighted_b64"] = numpy_to_b64(pdf1_marked)
+    res["img_b_highlighted_b64"] = numpy_to_b64(pdf2_marked)
+#added
+    res["overlay_combined_b64"] = numpy_to_b64(combined)
 
     return res
 

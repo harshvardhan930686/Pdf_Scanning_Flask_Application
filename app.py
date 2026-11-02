@@ -18,7 +18,8 @@ from PIL import Image, ImageOps, ImageDraw
 from scipy import ndimage
 from werkzeug.exceptions import HTTPException
 
-import pymupdf as fitz
+
+import fitz
 import diff_engine
 
 app = Flask(__name__)

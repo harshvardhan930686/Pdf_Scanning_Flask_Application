@@ -304,7 +304,7 @@ button:focus-visible,input:focus-visible,.dropzone:focus-visible,a:focus-visible
   display:flex;align-items:center;gap:8px;
   padding:8px 14px;font-size:12px;font-weight:600;color:var(--muted);
   background:var(--surface);border-bottom:1px solid var(--border);
-  position:sticky;top:calc(var(--hh) + 44px);z-index:10;
+  position:sticky;top:calc(var(--hh) + 1px);z-index:10;
 }
 .pane-legend{margin-left:auto;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;}
 .pane-legend-a{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);}
@@ -668,3 +668,19 @@ button:focus-visible,input:focus-visible,.dropzone:focus-visible,a:focus-visible
   .pane-legend{display:none;}
   .di-header{flex-direction:column;}
 }
+/*added*/
+#overlay-result-section{
+    margin-top:20px;
+    text-align:center;
+}
+
+#overlay-result-image{
+    max-width:100%;
+    height:auto;
+    border:1px solid var(--border);
+}
+/*added*/
+#di-visual-section{
+    display:none !important;
+}
+
