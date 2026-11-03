@@ -1254,7 +1254,7 @@ def _load_image(payload: bytes, filename: str, page: int = 1, max_dim: int = 140
             ph = max(float(page_obj.rect.height or 0), 1.0)
             # scale = min(2.0, float(max_dim) / max(pw, ph))
             # scale = max(0.05, scale)
-            scale = 2.5
+            scale = 2.85
             arr = _render_pdf_page(page_obj, scale)
             img = Image.fromarray(arr, 'RGB')
             return img, total_pages
@@ -1289,7 +1289,7 @@ def _load_image(payload: bytes, filename: str, page: int = 1, max_dim: int = 140
                     ph = max(float(page_obj.rect.height or 0), 1.0)
                     # scale = min(2.0, float(max_dim) / max(pw, ph))
                     # scale = max(0.05, scale)
-                    scale = 2.5
+                    scale = 2.85
                     arr = _render_pdf_page(page_obj, scale)
                     doc.close()
                     return Image.fromarray(arr, 'RGB'), total_pages
@@ -1676,7 +1676,7 @@ def compare_documents(bytes_a: bytes, filename_a: str,
             max_pt_h = max(float(page_a.rect.height or 0), float(page_b.rect.height or 0), 1.0)
             # scale = min(2.0, float(max_dim) / max(max_pt_w, max_pt_h))
             # scale = max(0.05, scale)
-            scale = 2.5
+            scale = 2.85
 
             try:
                 arr_a_raw = _render_pdf_page(page_a, scale)
